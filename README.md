@@ -6,3 +6,4 @@ Live at https://reliablermc.github.io/
 - Pages are plain HTML; open `index.html` to view locally.
 - Company details (phones, address, delivery areas, rates) are in `config.js`.
 - Service photos go in `images/` as `service-transportation.jpg` and `service-pumping.jpg`.
+- Bot protection on the forms: add your Google reCAPTCHA v2 site key to `recaptchaSiteKey` in `config.js` (steps in `README.txt`).

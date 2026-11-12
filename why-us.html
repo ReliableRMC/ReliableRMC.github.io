@@ -357,6 +357,12 @@ a.scard:hover .smedia > img{transform:scale(1.03)}
 @media (max-width:900px){.pflow{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:2.4rem}.pflow li::after{display:none}}
 @media (max-width:600px){.pflow{grid-template-columns:1fr}}
 .svc-hero .ticks{grid-template-columns:1fr}
+.captcha-wrap{margin:.4rem 0 1.1rem}
+.captcha{min-height:78px}
+.captcha-err{display:block;margin-top:.4rem}
+.captcha-wrap{max-width:100%;overflow:hidden}
+@media (max-width:400px){.captcha{transform:scale(.86);transform-origin:0 0;min-height:68px;margin-bottom:-10px}}
+@media (max-width:900px){.hero-grid,.split,.spec,.plant-row{grid-template-columns:minmax(0,1fr)}}
 
 </style>
 </head>
@@ -392,7 +398,7 @@ a.scard:hover .smedia > img{transform:scale(1.03)}
 <a class="wa-float" data-wa href="#" aria-label="Chat on WhatsApp"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg></a>
 <script src="config.js"></script>
 <script>
-const DEFAULTS = {"name": "Reliable RMC", "tagline": "Strong Foundations. Reliable Construction.", "contactName": "Sanskar Mittal", "phone1": "+91 95252 51291", "phone2": "+91 70197 85499", "whatsapp": "919525251291", "email": "", "address": "Opposite Indian Gas Godown, Mandir Hasaud, Chhattisgarh 492101", "mapUrl": "https://maps.app.goo.gl/jfCExDKu4RqgV4iR8", "instagram": "https://www.instagram.com/reliable.readymixconcrete", "areas": ["Mandir Hasaud", "Nava Raipur (Atal Nagar)", "Raipur", "Arang"], "hours": [], "plants": [{"name": "Mandir Hasaud Plant", "status": "Operational", "address": "Opposite Indian Gas Godown, Mandir Hasaud, Chhattisgarh 492101", "map": "https://maps.app.goo.gl/jfCExDKu4RqgV4iR8", "phones": ["+91 95252 51291", "+91 70197 85499"], "contact": "Sanskar Mittal", "capacity": "", "areas": ["Mandir Hasaud", "Nava Raipur (Atal Nagar)", "Raipur", "Arang"]}], "clients": [], "rates": {"M10": 0, "M15": 0, "M20": 0, "M25": 0, "M30": 0, "M35": 0, "M40": 0}, "mixerCapacity": 6, "wastage": 0.05, "highlights": ["Batched by weight", "Slump and cube tested", "Transit mixer delivery", "Concrete pumping"]};
+const DEFAULTS = {"name": "Reliable RMC", "tagline": "Strong Foundations. Reliable Construction.", "contactName": "Sanskar Mittal", "phone1": "+91 95252 51291", "phone2": "+91 70197 85499", "whatsapp": "919525251291", "email": "", "address": "Opposite Indian Gas Godown, Mandir Hasaud, Chhattisgarh 492101", "mapUrl": "https://maps.app.goo.gl/jfCExDKu4RqgV4iR8", "instagram": "https://www.instagram.com/reliable.readymixconcrete", "areas": ["Mandir Hasaud", "Nava Raipur (Atal Nagar)", "Raipur", "Arang"], "hours": [], "plants": [{"name": "Mandir Hasaud Plant", "status": "Operational", "address": "Opposite Indian Gas Godown, Mandir Hasaud, Chhattisgarh 492101", "map": "https://maps.app.goo.gl/jfCExDKu4RqgV4iR8", "phones": ["+91 95252 51291", "+91 70197 85499"], "contact": "Sanskar Mittal", "capacity": "", "areas": ["Mandir Hasaud", "Nava Raipur (Atal Nagar)", "Raipur", "Arang"]}], "clients": [], "rates": {"M10": 0, "M15": 0, "M20": 0, "M25": 0, "M30": 0, "M35": 0, "M40": 0}, "mixerCapacity": 6, "wastage": 0.05, "highlights": ["Batched by weight", "Slump and cube tested", "Transit mixer delivery", "Concrete pumping"], "recaptchaSiteKey": ""};
 (function(){
 const S = Object.assign({}, DEFAULTS, window.SITE || {});
 const $ = (s,r=document)=>r.querySelector(s), $$ = (s,r=document)=>[...r.querySelectorAll(s)];
@@ -479,9 +485,51 @@ $$('[data-calc]').forEach(c=>{
   });
 });
 
-/* forms open WhatsApp with the details filled in; no server needed */
-$$('form[data-wa-form]').forEach(f=>f.addEventListener('submit',e=>{
+/* forms: bot checks, then open WhatsApp with the details filled in */
+const forms=$$('form[data-wa-form]');
+const KEY=(S.recaptchaSiteKey||'').trim();
+const started=Date.now();
+const widgets=new Map();
+let rcState=KEY?'loading':'off';
+
+/* a hidden field people never see; simple bots fill every field */
+forms.forEach(f=>{
+  const hp=document.createElement('div');
+  hp.setAttribute('aria-hidden','true');
+  hp.style.cssText='position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden';
+  hp.innerHTML='<label>Leave this empty<input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>';
+  f.appendChild(hp);
+  const btn=f.querySelector('button[type="submit"]');
+  const box=document.createElement('div'); box.className='captcha-wrap';
+  box.innerHTML='<div class="captcha"></div><span class="err captcha-err" role="alert"></span>';
+  btn.before(box);
+  if(!KEY) box.hidden=true;
+});
+
+function renderCaptchas(){
+  if(!window.grecaptcha||!grecaptcha.render) return;
+  forms.forEach(f=>{
+    const wrap=f.querySelector('.captcha-wrap'), old=wrap.querySelector('.captcha');
+    const el=document.createElement('div'); el.className='captcha'; old.replaceWith(el);
+    widgets.set(f, grecaptcha.render(el,{sitekey:KEY,theme:document.documentElement.dataset.theme==='light'?'light':'dark',
+      callback:()=>{ wrap.querySelector('.captcha-err').textContent=''; }}));
+  });
+}
+window.rcReady=()=>{ rcState='ready'; renderCaptchas(); };
+if(KEY){
+  const sc=document.createElement('script');
+  sc.src='https://www.google.com/recaptcha/api.js?onload=rcReady&render=explicit';
+  sc.async=true; sc.defer=true;
+  sc.onerror=()=>{ rcState='failed'; };
+  document.head.appendChild(sc);
+  /* the widget can't change theme once drawn, so redraw it when the theme switches */
+  if(tbtn) tbtn.addEventListener('click',()=>{ if(rcState==='ready') renderCaptchas(); });
+}
+
+forms.forEach(f=>f.addEventListener('submit',e=>{
   e.preventDefault();
+  const cerr=f.querySelector('.captcha-err');
+  if(f.querySelector('[name="company_website"]').value) return;          /* bot filled the hidden field */
   let bad=null;
   $$('[data-label]',f).forEach(el=>{
     const er=el.parentElement.querySelector('.err'), miss=el.required&&!el.value.trim();
@@ -489,9 +537,20 @@ $$('form[data-wa-form]').forEach(f=>f.addEventListener('submit',e=>{
     if(miss&&!bad) bad=el;
   });
   if(bad){ bad.focus(); return; }
+  if(Date.now()-started<3000) return;                                     /* filled faster than a person can type */
+  if(KEY){
+    if(rcState!=='ready'){
+      cerr.textContent = rcState==='failed'
+        ? 'The security check could not load. Please call or WhatsApp us directly.'
+        : 'The security check is still loading. Try again in a moment.';
+      return;
+    }
+    if(!grecaptcha.getResponse(widgets.get(f))){ cerr.textContent='Tick “I’m not a robot” to send your request.'; return; }
+  }
   const lines=[hello+f.dataset.waForm];
   $$('[data-label]',f).forEach(el=>{ const v=el.value.trim(); if(v) lines.push(el.dataset.label+': '+v); });
   window.open(wa(lines.join('\n')),'_blank','noopener');
+  if(KEY) grecaptcha.reset(widgets.get(f));
 }));
 
 /* blog: filter, search, open an article */

@@ -12,6 +12,9 @@
               "capacity" (for example "60 m³ per hour") shows only if filled.
    clients    add {"name": "ABC Builders", "logo": "abc.png"} entries
               (logo optional). They replace the customer-type tiles.
+   recaptchaSiteKey
+              Google reCAPTCHA v2 ("I'm not a robot" checkbox) site key.
+              Leave "" to turn the check off. See README.txt for setup.
    rates      price per cubic metre for each grade. Leave 0 to hide
               the cost estimate in the calculator.
    ================================================================ */
@@ -70,5 +73,6 @@ window.SITE = {
     "Slump and cube tested",
     "Transit mixer delivery",
     "Concrete pumping"
-  ]
+  ],
+  "recaptchaSiteKey": ""
 };

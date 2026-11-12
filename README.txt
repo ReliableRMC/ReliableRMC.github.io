@@ -37,3 +37,13 @@ Put your photos in the images folder with exactly these names and they
 appear automatically:
     images/service-transportation.jpg   (a transit mixer)
     images/service-pumping.jpg          (a concrete pump)
+
+Google reCAPTCHA on the forms
+-----------------------------
+1. Go to https://www.google.com/recaptcha/admin/create (sign in with Google).
+2. Label: Reliable RMC. Type: reCAPTCHA v2 > "I'm not a robot" Checkbox.
+3. Domains: reliablermc.github.io (add localhost too if you test locally).
+4. Submit, copy the SITE KEY (not the secret key) and paste it into
+   config.js:   "recaptchaSiteKey": "PASTE-SITE-KEY-HERE",
+5. Commit and push. The checkbox appears on the quote, contact and
+   partner forms. The secret key is not used and must never go in this repo.
